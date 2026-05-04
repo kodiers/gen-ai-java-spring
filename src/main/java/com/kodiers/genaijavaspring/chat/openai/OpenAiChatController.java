@@ -20,7 +20,7 @@ public class OpenAiChatController {
     private final ChatClient chatClient;
     private final OpenAiService openAiService;
 
-    public OpenAiChatController(ChatClient chatClient, OpenAiService openAiService) {
+    public OpenAiChatController(@Qualifier("openAiChatClient") ChatClient chatClient, OpenAiService openAiService) {
         this.chatClient = chatClient;
         this.openAiService = openAiService;
     }

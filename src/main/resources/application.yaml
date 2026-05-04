@@ -8,10 +8,12 @@ spring:
     name: gen-ai-java-spring
   ai:
     openai:
-      api-key: ${OPENAI_API_KEY}
+      api-key: ${OPENAI_API_KEY} # ${OPENAI_API_KEY}
       chat:
         options:
           model: gpt-4o
+#          model: Qwen/Qwen2.5-Coder-7B-Instruct:nscale
+#      base-url: https://router.huggingface.co
     vertex:
       ai:
         gemini:
@@ -20,9 +22,18 @@ spring:
           chat:
             options:
               model: gemini-2.5-flash
+#    huggingface:
+#      chat:
+#        api-key: ${HUGGINGFACE_API_KEY}
+#        url:
+#        options:
+#          model: Qwen/Qwen2.5-Coder-7B-Instruct
+#          max-new-tokens: 1024
+#          temperature: 0.7
 logging:
   level:
     root: INFO
     com.genai.java.spring: INFO
     org.springframework.ai: INFO
 #  GOOGLE_APPLICATION_CREDENTIALS
+#  HUGGINGFACE_API_KEY

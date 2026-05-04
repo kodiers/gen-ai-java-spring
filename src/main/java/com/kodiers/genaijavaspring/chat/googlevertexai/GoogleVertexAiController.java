@@ -2,6 +2,7 @@ package com.kodiers.genaijavaspring.chat.googlevertexai;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClientResponse;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +19,7 @@ public class GoogleVertexAiController {
 
     private final ChatClient chatClient;
 
-    public GoogleVertexAiController(ChatClient chatClient) {
+    public GoogleVertexAiController(@Qualifier("vertexChatClient") ChatClient chatClient) {
         this.chatClient = chatClient;
     }
 
