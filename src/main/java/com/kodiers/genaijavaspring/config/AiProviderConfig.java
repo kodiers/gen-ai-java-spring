@@ -2,6 +2,7 @@ package com.kodiers.genaijavaspring.config;
 
 import org.springframework.ai.chat.client.ChatClient;
 //import org.springframework.ai.huggingface.HuggingfaceChatModel;
+import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.vertexai.gemini.VertexAiGeminiChatModel;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -28,4 +29,10 @@ public class AiProviderConfig {
 //        return ChatClient.builder(huggingfaceChatModel)
 //                .build();
 //    }
+
+    @Bean("ollamaChatClient")
+    public ChatClient ollamaChatClient(OllamaChatModel ollamaChatModel) {
+        return ChatClient.builder(ollamaChatModel)
+                .build();
+    }
 }

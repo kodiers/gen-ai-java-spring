@@ -7,11 +7,18 @@ spring:
   application:
     name: gen-ai-java-spring
   ai:
+#    openai:
+#      api-key: ${OPENAI_API_KEY} # ${OPENAI_API_KEY}
+#      chat:
+#        options:
+#          model: gpt-4o
+#    DOCKER MODEL
     openai:
-      api-key: ${OPENAI_API_KEY} # ${OPENAI_API_KEY}
+      api-key: dummy # ${OPENAI_API_KEY}
+      base-url: http://localhost:12434/engines/llama.cpp
       chat:
         options:
-          model: gpt-4o
+          model: docker.io/gemma4:latest
 #          model: Qwen/Qwen2.5-Coder-7B-Instruct:nscale
 #      base-url: https://router.huggingface.co
     vertex:
@@ -22,6 +29,14 @@ spring:
           chat:
             options:
               model: gemini-2.5-flash
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: custom-mistral-model:latest
+#          model: mistral:7b
+#          max-new-tokens: 512
+#          temperature: 0.7
 #    huggingface:
 #      chat:
 #        api-key: ${HUGGINGFACE_API_KEY}
