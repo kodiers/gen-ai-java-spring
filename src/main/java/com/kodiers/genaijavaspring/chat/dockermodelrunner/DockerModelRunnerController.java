@@ -1,6 +1,7 @@
 package com.kodiers.genaijavaspring.chat.dockermodelrunner;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,7 +24,12 @@ public class DockerModelRunnerController {
 
     @PostMapping("/linkedin-post-generator")
     public String generateLinkedInPost(@RequestBody String message) {
+        ChatOptions chatOptions = ChatOptions.builder()
+                .model("ai/qwen3-vl")
+                .maxTokens(50)
+                .build();
         return chatClient.prompt()
+                .options(chatOptions)
                 .system(SYSTEM_PROMPT)
                 .user(message)
                 .call()

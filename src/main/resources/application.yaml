@@ -7,18 +7,18 @@ spring:
   application:
     name: gen-ai-java-spring
   ai:
-#    openai:
-#      api-key: ${OPENAI_API_KEY} # ${OPENAI_API_KEY}
-#      chat:
-#        options:
-#          model: gpt-4o
-#    DOCKER MODEL
     openai:
-      api-key: dummy # ${OPENAI_API_KEY}
-      base-url: http://localhost:12434/engines/llama.cpp
+      api-key: ${OPENAI_API_KEY} # ${OPENAI_API_KEY}
       chat:
         options:
-          model: docker.io/gemma4:latest
+          model: gpt-4o
+#    DOCKER MODEL
+#    openai:
+#      api-key: dummy # ${OPENAI_API_KEY}
+#      base-url: http://localhost:12434/engines/llama.cpp
+#      chat:
+#        options:
+#          model: docker.io/gemma4:latest
 #          model: Qwen/Qwen2.5-Coder-7B-Instruct:nscale
 #      base-url: https://router.huggingface.co
     vertex:
