@@ -2,6 +2,7 @@ package com.kodiers.genaijavaspring.chat.openai;
 
 import com.kodiers.genaijavaspring.chat.openai.dto.response.SummarizationResponse;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -122,5 +123,20 @@ public class OpenAiChatController {
     @PostMapping("/summarize-with-openai-java-client")
     public String summarizeMeetingNotesWithOpenAiJavaClient(@RequestBody String meetingNotes) throws OpenAiChatException {
         return openAiService.chat(meetingNotes);
+    }
+
+    @PostMapping("/general-chat")
+    public String generalChat(@RequestBody String message) {
+        ChatOptions chatOptions = ChatOptions.builder()
+                .maxTokens(1000)
+//                .temperature(2.0)
+//                .topP(0.9)
+                .stopSequences(List.of("END_OF_PARAGRAPH"))
+                .build();
+        return chatClient.prompt()
+                .options(chatOptions)
+                .user(message)
+                .call()
+                .content();
     }
 }

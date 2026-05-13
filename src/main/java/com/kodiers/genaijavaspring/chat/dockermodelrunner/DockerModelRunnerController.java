@@ -26,7 +26,8 @@ public class DockerModelRunnerController {
     public String generateLinkedInPost(@RequestBody String message) {
         ChatOptions chatOptions = ChatOptions.builder()
                 .model("ai/qwen3-vl")
-                .maxTokens(50)
+                .maxTokens(100)
+                .temperature(0.0)
                 .build();
         return chatClient.prompt()
                 .options(chatOptions)
