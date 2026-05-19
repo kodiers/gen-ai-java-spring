@@ -3,8 +3,13 @@ package com.kodiers.genaijavaspring.chat.openai;
 import com.kodiers.genaijavaspring.chat.openai.dto.response.SummarizationResponse;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,6 +19,7 @@ import reactor.core.publisher.Flux;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/openai/chat")
@@ -21,12 +27,15 @@ public class OpenAiChatController {
 
     private static final String SYSTEM_PROMPT = "You are a helpful assistant that summarizes any given content. "
             + "Ensure that the summary is concise, informative, and captures the key points. "
-            + "Use a friendly and approachable tone while maintaining a professionalism."
-            + "Do not answer anything other than the summarization. If the question is not about summarization, "
-            + "respond with 'I am sorry, I cannot help with that.'";
+            + "Use a friendly and approachable tone while maintaining a professionalism.";
+//            + "Do not answer anything other than the summarization. If the question is not about summarization, "
+//            + "respond with 'I am sorry, I cannot help with that.'";
 
     private final ChatClient chatClient;
     private final OpenAiService openAiService;
+
+    @Value("classpath:/templates/summarize-prompt.st")
+    private Resource summarizePrompt;
 
     public OpenAiChatController(@Qualifier("openAiChatClient") ChatClient chatClient, OpenAiService openAiService) {
         this.chatClient = chatClient;
@@ -97,9 +106,23 @@ public class OpenAiChatController {
                 .entity(SummarizationResponse.class);
     }
 
+    @PostMapping("/summarize-meeting-notes-structured-with-prompt-template")
+    public SummarizationResponse summarizeMeetingNotesStructuredOutputAndPromptTemplate(@RequestBody String meetingNotes) {
+        PromptTemplate promptTemplate = new PromptTemplate(summarizePrompt);
+        Prompt prompt = promptTemplate.create(Map.of("meetingNotes", meetingNotes));
+        return chatClient.prompt(prompt)
+                .system(SYSTEM_PROMPT)
+                .call()
+                .entity(SummarizationResponse.class);
+    }
+
     @PostMapping("/summarize-meeting-notes-structured-list")
     public List<SummarizationResponse> summarizeMeetingNotesStructuredOutputList(@RequestBody String meetingNotes) {
+//        ChatOptions chatOptions = OpenAiChatOptions.builder()
+//                .N(3)
+//                .build();
         return chatClient.prompt()
+//                .options(chatOptions)
                 .system(SYSTEM_PROMPT)
                 .user(u -> u.text("Can you summarize the following meeting notes: {meetingNotes}"
                                 + "Give me 3 different summarizations in the same format so that I can choose from."
@@ -123,20 +146,5 @@ public class OpenAiChatController {
     @PostMapping("/summarize-with-openai-java-client")
     public String summarizeMeetingNotesWithOpenAiJavaClient(@RequestBody String meetingNotes) throws OpenAiChatException {
         return openAiService.chat(meetingNotes);
-    }
-
-    @PostMapping("/general-chat")
-    public String generalChat(@RequestBody String message) {
-        ChatOptions chatOptions = ChatOptions.builder()
-                .maxTokens(1000)
-//                .temperature(2.0)
-//                .topP(0.9)
-                .stopSequences(List.of("END_OF_PARAGRAPH"))
-                .build();
-        return chatClient.prompt()
-                .options(chatOptions)
-                .user(message)
-                .call()
-                .content();
     }
 }

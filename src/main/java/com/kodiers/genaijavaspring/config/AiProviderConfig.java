@@ -1,6 +1,8 @@
 package com.kodiers.genaijavaspring.config;
 
 import com.kodiers.genaijavaspring.chat.advisor.ErrorWrappingAdvisor;
+import com.kodiers.genaijavaspring.chat.advisor.SystemPromptAdvisor;
+import com.kodiers.genaijavaspring.chat.advisor.ValidationAdvisor;
 import org.springframework.ai.chat.client.ChatClient;
 //import org.springframework.ai.huggingface.HuggingfaceChatModel;
 import org.springframework.ai.chat.client.advisor.SafeGuardAdvisor;
@@ -19,9 +21,16 @@ public class AiProviderConfig {
 
     @Bean("openAiChatClient")
     public ChatClient openAiChatClient(OpenAiChatModel openAiChatModel, SimpleLoggerAdvisor simpleLoggerAdvisor,
-                                       SafeGuardAdvisor safeGuardAdvisor, ErrorWrappingAdvisor errorWrappingAdvisor) {
+                                       SafeGuardAdvisor safeGuardAdvisor, ErrorWrappingAdvisor errorWrappingAdvisor,
+                                       SystemPromptAdvisor systemPromptAdvisor, ValidationAdvisor validationAdvisor) {
         return ChatClient.builder(openAiChatModel)
-                .defaultAdvisors(safeGuardAdvisor, simpleLoggerAdvisor, errorWrappingAdvisor)
+                .defaultAdvisors(safeGuardAdvisor, simpleLoggerAdvisor, errorWrappingAdvisor, systemPromptAdvisor, validationAdvisor)
+                .build();
+    }
+
+    @Bean("openAiGeneralChatClient")
+    public ChatClient openAiGeneralChatClient(OpenAiChatModel openAiChatModel) {
+        return ChatClient.builder(openAiChatModel)
                 .build();
     }
 

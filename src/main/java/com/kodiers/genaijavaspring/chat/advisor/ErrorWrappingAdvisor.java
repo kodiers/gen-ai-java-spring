@@ -39,7 +39,8 @@ public class ErrorWrappingAdvisor implements CallAdvisor, StreamAdvisor {
                 .getOutput()
                 .getText()
                 .trim();
-        if (!assistantMessage.startsWith("```json") && !assistantMessage.startsWith("{")) {
+        if (!assistantMessage.startsWith("```json") && !assistantMessage.startsWith("{") &&
+                !assistantMessage.matches("(?s)^\\[\\s*\\{.*")) {
             SummarizationResponse summarizationResponse = new SummarizationResponse(null, null,
                     assistantMessage);
             chatClientResponse = chatClientResponse.mutate()
