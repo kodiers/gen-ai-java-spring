@@ -3,10 +3,15 @@ package com.kodiers.genaijavaspring.config;
 import com.kodiers.genaijavaspring.chat.advisor.ErrorWrappingAdvisor;
 import com.kodiers.genaijavaspring.chat.advisor.SystemPromptAdvisor;
 import com.kodiers.genaijavaspring.chat.advisor.ValidationAdvisor;
+import com.kodiers.genaijavaspring.chat.openai.jailbreak.BankingTools;
 import org.springframework.ai.chat.client.ChatClient;
 //import org.springframework.ai.huggingface.HuggingfaceChatModel;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SafeGuardAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.ChatMemoryRepository;
+import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.vertexai.gemini.VertexAiGeminiChatModel;
@@ -19,6 +24,14 @@ import java.util.List;
 @Configuration
 public class AiProviderConfig {
 
+    @Bean
+    public ChatMemory chatMemory(ChatMemoryRepository chatMemoryRepository) {
+        return MessageWindowChatMemory.builder()
+                .chatMemoryRepository(chatMemoryRepository)
+                .maxMessages(5)
+                .build();
+    }
+
     @Bean("openAiChatClient")
     public ChatClient openAiChatClient(OpenAiChatModel openAiChatModel, SimpleLoggerAdvisor simpleLoggerAdvisor,
                                        SafeGuardAdvisor safeGuardAdvisor, ErrorWrappingAdvisor errorWrappingAdvisor,
@@ -29,8 +42,17 @@ public class AiProviderConfig {
     }
 
     @Bean("openAiGeneralChatClient")
-    public ChatClient openAiGeneralChatClient(OpenAiChatModel openAiChatModel) {
+    public ChatClient openAiGeneralChatClient(OpenAiChatModel openAiChatModel, SafeGuardAdvisor safeGuardAdvisor) {
         return ChatClient.builder(openAiChatModel)
+                .defaultAdvisors(safeGuardAdvisor)
+//                .defaultTools(bankingTools)
+                .build();
+    }
+
+    @Bean("openAiChatClientWithMemory")
+    public ChatClient openAiChatClientWithMemory(OpenAiChatModel openAiChatModel, ChatMemory chatMemory) {
+        return ChatClient.builder(openAiChatModel)
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
                 .build();
     }
 

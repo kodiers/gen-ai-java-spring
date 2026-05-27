@@ -6,7 +6,20 @@ app:
 spring:
   application:
     name: gen-ai-java-spring
+  datasource:
+    url: jdbc:postgresql://localhost:7432/postgres?currentSchema=public&binaryTransfer=true&reWriteBatchedInserts=true&stringtype=unspecified
+    username: postgres
+    password: postgres
+#  sql:
+#    init:
+#      mode: always
+#      data-locations: classpath:db/data.sql
   ai:
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always
     openai:
       api-key: ${OPENAI_API_KEY} # ${OPENAI_API_KEY}
       chat:

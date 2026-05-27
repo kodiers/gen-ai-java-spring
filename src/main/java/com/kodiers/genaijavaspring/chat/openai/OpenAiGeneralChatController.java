@@ -1,6 +1,7 @@
 package com.kodiers.genaijavaspring.chat.openai;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,11 +17,12 @@ public class OpenAiGeneralChatController {
 
     private final ChatClient chatClient;
 
-    public OpenAiGeneralChatController(@Qualifier("openAiGeneralChatClient") ChatClient chatClient) {
-        this.chatClient = chatClient;
+    public OpenAiGeneralChatController(@Qualifier("openAiChatClientWithMemory") ChatClient chatClient,
+                                       SimpleLoggerAdvisor simpleLoggerAdvisor) {
+        this.chatClient = chatClient.mutate().defaultAdvisors(simpleLoggerAdvisor).build();
     }
 
-    @PostMapping("/general-chat")
+    @PostMapping("")
     public String generalChat(@RequestBody String message) {
 //        ChatOptions chatOptions = ChatOptions.builder()
 //                .maxTokens(1000)
