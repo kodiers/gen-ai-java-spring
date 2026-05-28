@@ -20,6 +20,13 @@ spring:
         repository:
           jdbc:
             initialize-schema: always
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        index-type: hnsw
+        distance-type: cosine_distance
+        dimensions: 1024
+        max-document-batch-size: 10000
     openai:
       api-key: ${OPENAI_API_KEY} # ${OPENAI_API_KEY}
       chat:
