@@ -7,6 +7,7 @@ import com.kodiers.genaijavaspring.chat.openai.jailbreak.BankingTools;
 import org.springframework.ai.chat.client.ChatClient;
 //import org.springframework.ai.huggingface.HuggingfaceChatModel;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.PromptChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SafeGuardAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.VectorStoreChatMemoryAdvisor;
@@ -38,6 +39,9 @@ public class AiProviderConfig {
     @Value("classpath:templates/vector-store-memory-system-prompt.st")
     private Resource vectorStoreMemorySystemPrompt;
 
+    @Value("classpath:templates/prompt-store-memory-system-prompt.st")
+    private Resource promptStoreMemorySystemPrompt;
+
     @Bean
     public PgVectorStore pgVectorStore(JdbcTemplate jdbcTemplate,
                                        @Qualifier("openAiEmbeddingModel") EmbeddingModel embeddingModel) {
@@ -66,7 +70,7 @@ public class AiProviderConfig {
     @Bean("openAiGeneralChatClient")
     public ChatClient openAiGeneralChatClient(OpenAiChatModel openAiChatModel, SafeGuardAdvisor safeGuardAdvisor) {
         return ChatClient.builder(openAiChatModel)
-                .defaultAdvisors(safeGuardAdvisor)
+//                .defaultAdvisors(safeGuardAdvisor)
 //                .defaultTools(bankingTools)
                 .build();
     }
@@ -75,11 +79,14 @@ public class AiProviderConfig {
     public ChatClient openAiChatClientWithMemory(OpenAiChatModel openAiChatModel, ChatMemory chatMemory,
                                                  PgVectorStore pgVectorStore) {
         return ChatClient.builder(openAiChatModel)
-                .defaultAdvisors(VectorStoreChatMemoryAdvisor.builder(pgVectorStore)
-                        .systemPromptTemplate(new PromptTemplate(vectorStoreMemorySystemPrompt))
-                        .defaultTopK(DEFAULT_TOP_K)
-                        .build(),
-                        MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .defaultAdvisors(PromptChatMemoryAdvisor.builder(chatMemory)
+                        .systemPromptTemplate(new PromptTemplate(promptStoreMemorySystemPrompt))
+                        .build())
+//                .defaultAdvisors(VectorStoreChatMemoryAdvisor.builder(pgVectorStore)
+//                        .systemPromptTemplate(new PromptTemplate(vectorStoreMemorySystemPrompt))
+//                        .defaultTopK(DEFAULT_TOP_K)
+//                        .build(),
+//                        MessageChatMemoryAdvisor.builder(chatMemory).build())
 //                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
                 .build();
     }

@@ -6,6 +6,10 @@ app:
 spring:
   application:
     name: gen-ai-java-spring
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
   datasource:
     url: jdbc:postgresql://localhost:7432/postgres?currentSchema=public&binaryTransfer=true&reWriteBatchedInserts=true&stringtype=unspecified
     username: postgres
@@ -32,6 +36,15 @@ spring:
       chat:
         options:
           model: gpt-4o
+      image:
+        options:
+          model: gpt-image-2
+#          n: 1
+          size: 1024x1024
+#          style: vivid
+#          quality: hd
+          # Additional image options
+    #          response_format: url
 #    DOCKER MODEL
 #    openai:
 #      api-key: dummy # ${OPENAI_API_KEY}
