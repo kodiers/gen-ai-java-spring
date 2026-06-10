@@ -4,12 +4,14 @@ import com.kodiers.genaijavaspring.chat.advisor.ErrorWrappingAdvisor;
 import com.kodiers.genaijavaspring.chat.advisor.SystemPromptAdvisor;
 import com.kodiers.genaijavaspring.chat.advisor.ValidationAdvisor;
 import com.kodiers.genaijavaspring.chat.openai.jailbreak.BankingTools;
+import com.kodiers.genaijavaspring.rag.config.data.RagConfigData;
 import org.springframework.ai.chat.client.ChatClient;
 //import org.springframework.ai.huggingface.HuggingfaceChatModel;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.PromptChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SafeGuardAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.VectorStoreChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
@@ -18,6 +20,8 @@ import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.SimpleVectorStore;
 import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
 import org.springframework.ai.vertexai.gemini.VertexAiGeminiChatModel;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -106,6 +110,21 @@ public class AiProviderConfig {
     @Bean("ollamaChatClient")
     public ChatClient ollamaChatClient(OllamaChatModel ollamaChatModel) {
         return ChatClient.builder(ollamaChatModel)
+                .build();
+    }
+
+    @Bean("openAiRagChatClient")
+    public ChatClient openAiRagChatClient(OpenAiChatModel openAiChatModel,
+                                          SimpleVectorStore simpleVectorStore,
+                                          SimpleLoggerAdvisor simpleLoggerAdvisor,
+                                          RagConfigData ragConfigData) {
+        return ChatClient.builder(openAiChatModel)
+                .defaultAdvisors(QuestionAnswerAdvisor.builder(simpleVectorStore)
+                        .searchRequest(SearchRequest.builder()
+                                .topK(ragConfigData.getTopK())
+                                .similarityThreshold(ragConfigData.getSimilarityThreshold())
+                                .build())
+                        .build(), simpleLoggerAdvisor)
                 .build();
     }
 
