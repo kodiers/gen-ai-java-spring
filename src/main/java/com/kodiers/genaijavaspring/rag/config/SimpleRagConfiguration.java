@@ -44,17 +44,6 @@ public class SimpleRagConfiguration {
         return simpleVectorStore;
     }
 
-    @Bean
-    public TokenTextSplitter tokenTextSplitter(RagConfigData ragConfigData) {
-        return TokenTextSplitter.builder()
-                .withChunkSize(ragConfigData.getChunk().getSize())
-                .withMinChunkSizeChars(ragConfigData.getChunk().getMinChunkSize())
-                .withMinChunkLengthToEmbed(ragConfigData.getChunk().getMinChunkToEmbed())
-                .withMaxNumChunks(ragConfigData.getChunk().getMaxNumChunks())
-                .withKeepSeparator(ragConfigData.getChunk().isKeepSeparator())
-                .build();
-    }
-
     private List<Document> getChunks(List<Document> documents, TokenTextSplitter textSplitter) {
         return textSplitter.apply(documents);
     }
