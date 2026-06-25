@@ -6,6 +6,9 @@ import com.kodiers.genaijavaspring.chat.advisor.ValidationAdvisor;
 import com.kodiers.genaijavaspring.chat.openai.jailbreak.BankingTools;
 import com.kodiers.genaijavaspring.rag.config.data.PgVectorStoreConfigData;
 import com.kodiers.genaijavaspring.rag.config.data.RagConfigData;
+import com.kodiers.genaijavaspring.rag.config.postprocessor.CitationHeaderPostProcessor;
+import com.kodiers.genaijavaspring.rag.config.postprocessor.NeighbourStitchPostProcessor;
+import com.kodiers.genaijavaspring.rag.config.preprocessor.DomainSynonymTransformer;
 import org.springframework.ai.chat.client.ChatClient;
 //import org.springframework.ai.huggingface.HuggingfaceChatModel;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -83,13 +86,18 @@ public class AiProviderConfig {
 
     @Bean
     public RetrievalAugmentationAdvisor ragAdvisor(@Qualifier("ragVectorStore") VectorStore vectorStore,
-                                                   RagConfigData ragConfigData) {
+                                                   RagConfigData ragConfigData,
+                                                   DomainSynonymTransformer domainSynonymTransformer,
+                                                   NeighbourStitchPostProcessor neighbourStitchPostProcessor,
+                                                   CitationHeaderPostProcessor citationHeaderPostProcessor) {
         return RetrievalAugmentationAdvisor.builder()
+                .queryTransformers(domainSynonymTransformer)
                 .documentRetriever(VectorStoreDocumentRetriever.builder()
                         .vectorStore(vectorStore)
                         .topK(ragConfigData.getTopK())
                         .similarityThreshold(ragConfigData.getSimilarityThreshold())
                         .build())
+                .documentPostProcessors(neighbourStitchPostProcessor, citationHeaderPostProcessor)
                 .queryAugmenter(ContextualQueryAugmenter.builder()
                         .allowEmptyContext(false)
                         .build())
