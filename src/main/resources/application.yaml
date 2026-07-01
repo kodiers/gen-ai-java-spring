@@ -5,7 +5,7 @@ app:
     provider: openai # or openai /vertexai
   rag:
     force-rebuild: true
-    top-k: 4
+    top-k: 20
     similarity-threshold: 0.0
     radius: 1
     chunk:
@@ -21,6 +21,13 @@ app:
       left-alignment: true
       number-of-top-text-lines-to-delete: 0
       number-of-bottom-text-lines-to-delete: 0
+    query-expander:
+      number-of-queries: 4
+    rerank:
+      url: "https://api.cohere.com/v2/rerank"
+      api-key: ${COHERE_API_KEY}
+      model: "rerank-english-v3.0"
+      top-n: 6
     synonyms:
       PTO: "paid time off"
       SSO: "single sign-on"

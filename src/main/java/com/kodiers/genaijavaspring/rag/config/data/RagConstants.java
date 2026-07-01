@@ -13,4 +13,5 @@ public class RagConstants {
     public static final String PAGE_SNAKE = "page_number";
     public static final String PAGE_CAMEL = "pageNumber";
     public static final String PAGE = "page";
+    public static final String CHECKSUM = "checksum";
 }

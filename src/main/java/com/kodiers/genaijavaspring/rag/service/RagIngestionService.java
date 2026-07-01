@@ -13,12 +13,19 @@ import org.springframework.ai.reader.pdf.config.PdfDocumentReaderConfig;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Path;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -64,7 +71,26 @@ public class RagIngestionService {
             return;
         }
         ingestDocumentChunksToVectorStore(pdfResources);
-        
+    }
+
+    public void upsertOneByPath(Path path) {
+        log.info("Upserting document at path: {}", path);
+        FileSystemResource resource = new FileSystemResource(path.toFile());
+        String source = resource.getFilename();
+        String checksum = sha256Hex(resource);
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + ragVectorStoreTableName
+                + " WHERE metadata->>'source'= ? AND metadata->>'checksum'= ?", Integer.class, source, checksum);
+        if (count != null && count > 0) {
+            log.info("Document already exists in vector store, skipping upsert, checksum: {}", checksum);
+            return;
+        }
+        deleteBySource(source);
+        ingestDocumentChunksToVectorStore(new Resource[]{resource});
+    }
+
+    public void deleteBySource(String source) {
+        jdbcTemplate.update("DELETE FROM " + ragVectorStoreTableName + " WHERE metadata->>'source'= ?", source);
+        log.info("Deleted rows from vector store for source: {}", source);
     }
 
     private void ingestDocumentChunksToVectorStore(Resource[] pdfResources) {
@@ -104,6 +130,8 @@ public class RagIngestionService {
             part.getMetadata().putIfAbsent(RagConstants.DOC_TYPE, resource.getFilename().substring(0,
                     resource.getFilename().indexOf(".")));
             part.getMetadata().putIfAbsent(RagConstants.UPDATED_AT, ZonedDateTime.now().toLocalDate().toString());
+            String checksum = sha256Hex(resource);
+            part.getMetadata().putIfAbsent(RagConstants.CHECKSUM, checksum);
         });
     }
 
@@ -143,5 +171,24 @@ public class RagIngestionService {
             }
         }
         return false;
+    }
+
+    private String sha256Hex(Resource source) {
+        final MessageDigest digest = newMessageDigest("SHA-256");
+        try (InputStream inputStream = source.getInputStream();
+             DigestInputStream digestInputStream = new DigestInputStream(inputStream, digest)) {
+            digestInputStream.transferTo(OutputStream.nullOutputStream());
+            return HexFormat.of().formatHex(digest.digest());
+        } catch (Exception e) {
+            throw new RagException("Error calculating checksum for resource: " + source.getFilename(), e);
+        }
+    }
+
+    private MessageDigest newMessageDigest(String algorithm) {
+        try {
+            return MessageDigest.getInstance(algorithm);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RagException("No jca provider", e);
+        }
     }
 }

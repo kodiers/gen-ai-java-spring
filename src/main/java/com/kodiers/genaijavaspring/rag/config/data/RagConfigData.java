@@ -30,6 +30,18 @@ public class RagConfigData {
         private int numberOfBottomTextLinesToDelete;
     }
 
+    @Data
+    public static class QueryExpansionProperties {
+        private int numberOfQueries;
+    }
+
+    @Data
+    public static class RerankProperties {
+        private String url;
+        private String apiKey;
+        private String model;
+        private int topN;
+    }
 
 
     private boolean forceRebuild;
@@ -39,4 +51,6 @@ public class RagConfigData {
     private PdfProperties pdf;
     private Map<String, String> synonyms;
     private int radius;
+    private QueryExpansionProperties queryExpander;
+    private RerankProperties rerank;
 }

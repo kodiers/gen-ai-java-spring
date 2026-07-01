@@ -9,6 +9,7 @@ import com.kodiers.genaijavaspring.rag.config.data.RagConfigData;
 import com.kodiers.genaijavaspring.rag.config.postprocessor.CitationHeaderPostProcessor;
 import com.kodiers.genaijavaspring.rag.config.postprocessor.NeighbourStitchPostProcessor;
 import com.kodiers.genaijavaspring.rag.config.preprocessor.DomainSynonymTransformer;
+import com.kodiers.genaijavaspring.rag.rerank.processor.RerankPostProcessor;
 import org.springframework.ai.chat.client.ChatClient;
 //import org.springframework.ai.huggingface.HuggingfaceChatModel;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -24,8 +25,10 @@ import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
+import org.springframework.ai.rag.preretrieval.query.expansion.MultiQueryExpander;
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -57,6 +60,9 @@ public class AiProviderConfig {
     @Value("classpath:templates/prompt-store-memory-system-prompt.st")
     private Resource promptStoreMemorySystemPrompt;
 
+    @Value("classpath:templates/query-expander-prompt.st")
+    private Resource queryExpanderPrompt;
+
     @Bean("chatMemoryVectorStore")
     public VectorStore chatMemoryVectorStore(JdbcTemplate jdbcTemplate,
                                              PgVectorStoreConfigData pgVectorStoreConfigData,
@@ -84,20 +90,38 @@ public class AiProviderConfig {
                 .build();
     }
 
+    @Bean("queryExpanderChatClientBuilder")
+    public ChatClient.Builder queryExpanderChatClientBuilder(OpenAiChatModel openAiChatModel) {
+        return ChatClient.builder(openAiChatModel)
+                .defaultOptions(OpenAiChatOptions.builder()
+                        .temperature(0.0)
+                        .maxTokens(256)
+                        .build());
+    }
+
     @Bean
     public RetrievalAugmentationAdvisor ragAdvisor(@Qualifier("ragVectorStore") VectorStore vectorStore,
                                                    RagConfigData ragConfigData,
                                                    DomainSynonymTransformer domainSynonymTransformer,
                                                    NeighbourStitchPostProcessor neighbourStitchPostProcessor,
-                                                   CitationHeaderPostProcessor citationHeaderPostProcessor) {
+                                                   CitationHeaderPostProcessor citationHeaderPostProcessor,
+                                                   @Qualifier("queryExpanderChatClientBuilder") ChatClient.Builder
+                                                               queryExpanderChatClientBuilder,
+                                                   RerankPostProcessor rerankPostProcessor) {
         return RetrievalAugmentationAdvisor.builder()
                 .queryTransformers(domainSynonymTransformer)
+                .queryExpander(MultiQueryExpander.builder()
+                        .chatClientBuilder(queryExpanderChatClientBuilder)
+                        .numberOfQueries(ragConfigData.getQueryExpander().getNumberOfQueries())
+                        .promptTemplate(new PromptTemplate(queryExpanderPrompt))
+                        .build()
+                )
                 .documentRetriever(VectorStoreDocumentRetriever.builder()
                         .vectorStore(vectorStore)
                         .topK(ragConfigData.getTopK())
                         .similarityThreshold(ragConfigData.getSimilarityThreshold())
                         .build())
-                .documentPostProcessors(neighbourStitchPostProcessor, citationHeaderPostProcessor)
+                .documentPostProcessors(rerankPostProcessor, neighbourStitchPostProcessor, citationHeaderPostProcessor)
                 .queryAugmenter(ContextualQueryAugmenter.builder()
                         .allowEmptyContext(false)
                         .build())
